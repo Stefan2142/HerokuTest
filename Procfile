@@ -1,1 +1,1 @@
-web: gunicorn hajmo:server
+web: gunicorn app:server
