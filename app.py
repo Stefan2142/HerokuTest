@@ -257,7 +257,7 @@ weekdays_fig.update_layout(
 #                    y=best_weekday_df.max(),
 #                    text="Max",
 #                    opacity=0.7)
-logo_image = os.path.join(os.getcwd(), r"Logo.png")
+logo_image = os.path.join(os.getcwd(), r"/../Logo.png")
 encoded_image = base64.b64encode(open(logo_image, "rb").read())
 
 PLOTLY_LOGO = "https://assets.website-files.com/5c253860fd28a73e98ee5416/60b7c13e4795f4648fbf7b04_nabis_lockup_n.png"
