@@ -94,7 +94,7 @@ external_stylesheets = [
 ]
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-# server = app.server
+server = app.server
 def create_tabs():
     tabs = []
 
