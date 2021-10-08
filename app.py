@@ -64,6 +64,7 @@ wks = sh.worksheet("Main_working_sheet")
 nabis_dispatch_data = pd.DataFrame(
     wks.get_all_records(),
 )
+
 nabis_dispatch_data = nabis_dispatch_data.fillna(value="")
 nabis_dispatch_data["City"] = nabis_dispatch_data["City"].astype(str)
 nabis_dispatch_data["Your name"] = nabis_dispatch_data["Your name"].astype(str)
@@ -93,7 +94,7 @@ external_stylesheets = [
 ]
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-server = app.server
+# server = app.server
 def create_tabs():
     tabs = []
 
@@ -141,11 +142,11 @@ def create_tabs():
         margin=dict(l=0, r=0, t=0, b=0),
         height=300,
     )
-    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#3A3A3A")
+    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#3A3A3A", fixedrange = True)
     # fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="#3A3A3A")
 
-    fig.update_yaxes(zeroline=True, zerolinewidth=2, zerolinecolor="#3A3A3A")
-    tabs.append(dcc.Tab(label='All Names', value='All Names', children=[dcc.Graph(figure=fig)]))
+    fig.update_yaxes(zeroline=True, zerolinewidth=2, zerolinecolor="#3A3A3A", fixedrange = True)
+    tabs.append(dcc.Tab(label='All Names', value='All Names', children=[dcc.Graph(figure=fig, config = {'displayModeBar':False, 'scrollZoom':False} )]))
 
     # Iteration
     for name in names:
@@ -184,11 +185,11 @@ def create_tabs():
             margin=dict(l=0, r=0, t=0, b=0),
             height=300,
         )
-        fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#3A3A3A")
+        fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#3A3A3A", fixedrange = True)
         # fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="#3A3A3A")
 
-        fig.update_yaxes(zeroline=True, zerolinewidth=2, zerolinecolor="#3A3A3A")
-        tabs.append(dcc.Tab(label=name, value=name, children=[dcc.Graph(figure=fig)]))
+        fig.update_yaxes(zeroline=True, zerolinewidth=2, zerolinecolor="#3A3A3A", fixedrange = True)
+        tabs.append(dcc.Tab(label=name, value=name, children=[dcc.Graph(figure=fig, config = {'displayModeBar':False, 'scrollZoom':False})]))
 
     return tabs
 
@@ -225,9 +226,10 @@ weekdays_fig = px.bar(
     best_weekday_df,
     x="Weekday",
     y="Total orders",
+    text=best_weekday_df['Total orders'].values.tolist(),
     # title="Weekday sales order distribution",
     color="Total orders",
-    color_continuous_scale = px.colors.sequential.YlOrRd,
+    color_continuous_scale = px.colors.sequential.Plotly3,
     height = 310
 )
 weekdays_fig.update_layout(
@@ -246,6 +248,8 @@ weekdays_fig.update_layout(
                 bgcolor="#393939",
                 borderwidth=5,
             ))
+weekdays_fig.update_xaxes( fixedrange = True)
+weekdays_fig.update_yaxes( fixedrange = True)
 # weekdays_fig.add_annotation(showarrow=True,
 #                    arrowhead=2,
 #                    arrowwidth=2,
@@ -257,9 +261,9 @@ weekdays_fig.update_layout(
 #                    y=best_weekday_df.max(),
 #                    text="Max",
 #                    opacity=0.7)
-# logo_image = os.path.join(os.getcwd(), r"/../Logo.png")
+# logo_image = os.path.join(os.getcwd(), "Logo.png")
 # encoded_image = base64.b64encode(open(logo_image, "rb").read())
-encoded_image = None
+
 PLOTLY_LOGO = "https://assets.website-files.com/5c253860fd28a73e98ee5416/60b7c13e4795f4648fbf7b04_nabis_lockup_n.png"
 # navbar = dbc.NavbarSimple(
 #     children=[
@@ -338,7 +342,7 @@ app.layout = html.Div(
                                                     "font-weight": "bold"
                                                 },
                                             ),
-                                        dbc.CardBody(dcc.Graph(figure=weekdays_fig))],
+                                        dbc.CardBody(dcc.Graph(figure=weekdays_fig, config = {'displayModeBar':False, 'scrollZoom':False}))],
                                         style={
                                             "color": colors["text"],
                                             "backgroundColor": "#393939",
@@ -383,8 +387,8 @@ app.layout = html.Div(
                                     dbc.Card(
                                         dbc.Row(
                                             html.Div(
-                                                dcc.Graph(figure=best_members_fig),
-                                                style={"width": "100%"},
+                                                dcc.Graph(figure=best_members_fig, config = {'displayModeBar':False, 'scrollZoom':False}),
+                                                style={"width": "100%"}
                                             )
                                         ),
                                         body=True,
@@ -412,7 +416,7 @@ app.layout = html.Div(
                                             "backgroundColor": "#393939",
                                             "borderRadius": "12px",
                                             "lineHeight": 0.9,
-                                        },
+                                        }, config = {'displayModeBar':False, 'scrollZoom':False},
                                         )],
                                                 style={"width": "100%"},
                                             )
@@ -440,6 +444,8 @@ app.layout = html.Div(
         )
     ]
 )
+
+
 
 
 
