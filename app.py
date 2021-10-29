@@ -59,7 +59,7 @@ gc = gspread.service_account(filename="./emailsending-325211-e5456e88f282.json")
 sh = gc.open_by_url(
     "https://docs.google.com/spreadsheets/d/1rRwdq2otnXI9d3B9LfYRarQl6RxANP0_TqTQLjTY9A8/edit#gid=1032147445"
 )
-wks = sh.worksheet("Main_working_sheet")
+wks = sh.worksheet("Sheet6")
 
 nabis_dispatch_data = pd.DataFrame(
     wks.get_all_records(),
