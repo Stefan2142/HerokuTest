@@ -101,22 +101,22 @@ def create_tabs():
   
     fig = go.Figure()
 
-    fig.add_trace(go.Scatter(x=nabis_dispatch_data['Date'], 
-                            y=nabis_dispatch_data[nabis_dispatch_data["Your name"] == names[0]]['Total orders'],
+    fig.add_trace(go.Scatter(x=nabis_dispatch_data[nabis_dispatch_data["Your name"] == names[0]].groupby(by='Date').sum().reset_index()['Date'], 
+                            y=nabis_dispatch_data[nabis_dispatch_data["Your name"] == names[0]].groupby(by='Date').sum().reset_index()['Total orders'],
                             mode='lines',
                             name=names[0],
                             line=dict(color='#3372FF', width=4),
                             fill='tozeroy',
                             line_shape='spline'))
-    fig.add_trace(go.Scatter(x=nabis_dispatch_data['Date'], 
-                            y=nabis_dispatch_data[nabis_dispatch_data["Your name"] == names[1]]['Total orders'],
+    fig.add_trace(go.Scatter(x=nabis_dispatch_data[nabis_dispatch_data["Your name"] == names[1]].groupby(by='Date').sum().reset_index()['Date'], 
+                            y=nabis_dispatch_data[nabis_dispatch_data["Your name"] == names[1]].groupby(by='Date').sum().reset_index()['Total orders'],
                             mode='lines',
                             name=names[1],
                             line=dict(color='#33FF51', width=4),
                             fill='tozeroy',
                             line_shape='spline'))
-    fig.add_trace(go.Scatter(x=nabis_dispatch_data['Date'], 
-                            y=nabis_dispatch_data[nabis_dispatch_data["Your name"] == names[2]]['Total orders'],
+    fig.add_trace(go.Scatter(x=nabis_dispatch_data[nabis_dispatch_data["Your name"] == names[2]].groupby(by='Date').sum().reset_index()['Date'], 
+                            y=nabis_dispatch_data[nabis_dispatch_data["Your name"] == names[2]].groupby(by='Date').sum().reset_index()['Total orders'],
                             mode='lines',
                             name=names[2],
                             line=dict(color='#FF3333', width=4),
@@ -125,7 +125,7 @@ def create_tabs():
     fig.update_layout(
         hovermode="x",
         font=dict(
-            family="Courier New, monospace",
+            family="sans-serif", # Courier New, monospace
             size=14,
             color=colors["figure_text"],
         ),
@@ -142,7 +142,7 @@ def create_tabs():
         margin=dict(l=0, r=0, t=0, b=0),
         height=300,
     )
-    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#3A3A3A", fixedrange = True)
+    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="#3A3A3A", fixedrange = True,  range = [nabis_dispatch_data['Date'].min(), nabis_dispatch_data['Date'].max()])
     # fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="#3A3A3A")
 
     fig.update_yaxes(zeroline=True, zerolinewidth=2, zerolinecolor="#3A3A3A", fixedrange = True)
@@ -152,7 +152,7 @@ def create_tabs():
     for name in names:
         fig = go.Figure()
 
-        temp_df = nabis_dispatch_data[nabis_dispatch_data["Your name"] == name]
+        temp_df = nabis_dispatch_data[nabis_dispatch_data["Your name"] == name].groupby(by='Date').sum().reset_index()
         fig.add_trace(
             go.Scatter(
                 x=temp_df["Date"],
@@ -193,6 +193,7 @@ def create_tabs():
 
     return tabs
 
+
 tabs = create_tabs()
 
 best_members_fig = px.pie(
@@ -219,9 +220,10 @@ best_city_fig.update_traces(
 )
 best_city_fig.update_layout(paper_bgcolor = "#3A3A3A", margin=dict(t=10, b=0, l=0, r=0), height = 250, showlegend = False)
 
-
+custom_weekday_sort = {'Monday':0, 'Tuesday':1, 'Wednesday':2, 'Thursday':3, 'Friday':4, 'Saturday':5, 'Sunday':6}
 best_weekday_df = nabis_dispatch_data.groupby(["Weekday"]).sum()
 best_weekday_df.reset_index(inplace=True)
+best_weekday_df.sort_values(by=['Weekday'], inplace = True, key= lambda x: x.map(custom_weekday_sort))
 weekdays_fig = px.bar(
     best_weekday_df,
     x="Weekday",
