@@ -121,7 +121,7 @@ external_stylesheets = [
 ]
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-# server = app.server
+server = app.server
 def create_tabs():
     tabs = []
 
@@ -586,7 +586,8 @@ app.layout = html.Div(
 )
 
 if __name__ == "__main__":
-    app.run_server(debug=True, use_reloader=True, threaded=True, port = 1776)
+    # app.run_server(debug=True, use_reloader=True, threaded=True, port = 1776)
+    app.run_server()
     
 # Things to do for Heroku
 # Uncomment 'server' line
