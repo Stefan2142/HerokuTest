@@ -287,7 +287,7 @@ def create_tabs():
     # fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="#3A3A3A")
 
     fig.update_yaxes(zeroline=True, zerolinewidth=2, zerolinecolor="#3A3A3A", fixedrange = True)
-    tabs.append(dcc.Tab(label='Working hours', value='Working hours', children=[dcc.Graph(figure=fig, config = {'displayModeBar':False, 'scrollZoom':False} )]))
+    tabs.append(dcc.Tab(label='Working hours (HubStaff)', value='Working hours (HubStaff)', children=[dcc.Graph(figure=fig, config = {'displayModeBar':False, 'scrollZoom':False} )]))
 
     return tabs
 
