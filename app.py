@@ -120,7 +120,7 @@ external_stylesheets = [
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css",
 ]
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], title = 'NABIS')
 server = app.server
 def create_tabs():
     tabs = []
@@ -524,26 +524,6 @@ app.layout = html.Div(
                                     ),
                                     html.Br(),
                                     
-                                    
-                                    
-                                    dbc.Card(
-                                        [html.H4(
-                                                children="Total order distribution by weekday:",
-                                                style={
-                                                    "textAlign": "center",
-                                                    "color": colors["recovered_text"],
-                                                    "padding-top":'5px',
-                                                    "font-weight": "bold"
-                                                },
-                                            ),
-                                        dbc.CardBody(dcc.Graph(figure=weekdays_fig, config = {'displayModeBar':False, 'scrollZoom':False}))],
-                                        style={
-                                            "color": colors["recovered_text"],
-                                            "backgroundColor": "#393939",
-                                            "borderRadius": "12px",
-                                            "lineHeight": 0.9,
-                                        },
-                                    ),
                                 ],
                                 width=12,
                             ),
@@ -637,7 +617,6 @@ app.layout = html.Div(
                             # ),
                         ]
                     ),
-                    html.Br(),
                     dbc.Row(
                         [
                             dbc.Col([
@@ -666,35 +645,36 @@ app.layout = html.Div(
                                     )
                                 ], 
                                     width = 4),
-                            dbc.Card(
-                                        dbc.Row(
-                                            html.Div([
-                                                html.H4(
-                                                children="Orders by city:",
-                                                style={
-                                                    "textAlign": "center",
-                                                    "color": colors["recovered_text"],
-                                                    "font-weight": "bold"
-                                                },
+                            # 
+                            dbc.Col([ dbc.Card(
+                                            dbc.Row(
+                                                html.Div([
+                                                    html.H4(
+                                                    children="Orders by city:",
+                                                    style={
+                                                        "textAlign": "center",
+                                                        "color": colors["recovered_text"],
+                                                        "font-weight": "bold"
+                                                    },
+                                                ),
+                                                    dcc.Graph(figure=best_city_fig, style={
+                                                "color": colors["recovered_text"],
+                                                "backgroundColor": "#393939",
+                                                "borderRadius": "12px",
+                                                "lineHeight": 0.9,
+                                            }, config = {'displayModeBar':False, 'scrollZoom':False},
+                                            )],
+                                                    style={"width": "100%"},
+                                                )
                                             ),
-                                                dcc.Graph(figure=best_city_fig, style={
-                                            "color": colors["recovered_text"],
-                                            "backgroundColor": "#393939",
-                                            "borderRadius": "12px",
-                                            "lineHeight": 0.9,
-                                        }, config = {'displayModeBar':False, 'scrollZoom':False},
-                                        )],
-                                                style={"width": "100%"},
-                                            )
-                                        ),
-                                        body=True,
-                                        style={
-                                            "color": colors["recovered_text"],
-                                            "backgroundColor": "#393939",
-                                            "borderRadius": "12px",
-                                            "lineHeight": 0.9,
-                                        },
-                                    ),
+                                            body=True,
+                                            style={
+                                                "color": colors["recovered_text"],
+                                                "backgroundColor": "#393939",
+                                                "borderRadius": "12px",
+                                                "lineHeight": 0.9,
+                                            },
+                                        )],width = 4),
                             dbc.Col([
                                 dbc.Card(
                                         dbc.Col(
@@ -722,6 +702,33 @@ app.layout = html.Div(
                                 ], 
                                     width = 4)
                         ]),
+                    html.Br(),
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                [dbc.Card(
+                                        [html.H4(
+                                                children="Total order distribution by weekday:",
+                                                style={
+                                                    "textAlign": "center",
+                                                    "color": colors["recovered_text"],
+                                                    "padding-top":'5px',
+                                                    "font-weight": "bold"
+                                                },
+                                            ),
+                                        dbc.CardBody(dcc.Graph(figure=weekdays_fig, config = {'displayModeBar':False, 'scrollZoom':False}))],
+                                        style={
+                                            "color": colors["recovered_text"],
+                                            "backgroundColor": "#393939",
+                                            "borderRadius": "12px",
+                                            "lineHeight": 0.9,
+                                        },
+                                    ),
+                                    ],
+                                width = 12
+                            )
+                        ]
+                    ),
                 ],
                 style={
                     "color": colors["recovered_text"],
