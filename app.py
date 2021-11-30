@@ -432,25 +432,25 @@ app.layout = html.Div(
             dbc.CardBody(
                 [
                     # dbc.Row(html.Div(style={"height": "50px"})),
-                    dbc.Row(
-                            dbc.Col(
-                                dbc.Card(
-                                        [html.H4(
-                                                children="Date range",
-                                                style={
-                                                    "textAlign": "center",
-                                                    "color": colors["recovered_text"],
-                                                    "padding-top":'5px',
-                                                    "font-weight": "bold"
-                                                },
-                                            ),
-                                        dbc.CardBody(slajder)], 
-                                        style = {"backgroundColor": "#393939",
-                                                 "borderRadius": "12px",
-                                                 "lineHeight": 0.9,}), 
-                                    className = 'w-100')
-                            ),
-                    html.Br(),
+#                     dbc.Row(
+#                             dbc.Col(
+#                                 dbc.Card(
+#                                         [html.H4(
+#                                                 children="Date range",
+#                                                 style={
+#                                                     "textAlign": "center",
+#                                                     "color": colors["recovered_text"],
+#                                                     "padding-top":'5px',
+#                                                     "font-weight": "bold"
+#                                                 },
+#                                             ),
+#                                         dbc.CardBody(slajder)], 
+#                                         style = {"backgroundColor": "#393939",
+#                                                  "borderRadius": "12px",
+#                                                  "lineHeight": 0.9,}), 
+#                                     className = 'w-100')
+#                             ),
+#                     html.Br(),
                     dbc.Row(
                         [
                             dbc.Col(
