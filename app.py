@@ -388,11 +388,12 @@ numdate= [x for x in range(len(nabis_dispatch_data['Date'].unique()))]
 # numdate= [x.strftime('%d/%m') for x in nabis_dispatch_data['Date'].dt.date.unique().tolist()]
 numdate = numdate[::7]
 #then in the Slider
-slajder = html.Div(dcc.RangeSlider(min=numdate[0], #the first date
+slajder = html.Div(dcc.RangeSlider(id = 'date-range-slider',min=numdate[0], #the first date
                max=numdate[-1], #the last date
                value=[numdate[0], numdate[-1]], #default: the first
-               marks = {numd:date.strftime('%d/%m') for numd,date in zip(numdate, nabis_dispatch_data['Date'].dt.date.unique().tolist()[::7])},
+               marks = range_slider_marks_sliced,
                # tooltip = {'placement':'bottom', 'always_visible':True},
+               pushable = 2,
                allowCross = False), style = {"backgroundColor": "#393939"})
 # slajder = dcc.Slider(
 #     min=0,
