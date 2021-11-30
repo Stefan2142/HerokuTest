@@ -432,25 +432,26 @@ app.layout = html.Div(
             dbc.CardBody(
                 [
                     # dbc.Row(html.Div(style={"height": "50px"})),
-#                     dbc.Row(
-#                             dbc.Col(
-#                                 dbc.Card(
-#                                         [html.H4(
-#                                                 children="Date range",
-#                                                 style={
-#                                                     "textAlign": "center",
-#                                                     "color": colors["recovered_text"],
-#                                                     "padding-top":'5px',
-#                                                     "font-weight": "bold"
-#                                                 },
-#                                             ),
-#                                         dbc.CardBody(slajder)], 
-#                                         style = {"backgroundColor": "#393939",
-#                                                  "borderRadius": "12px",
-#                                                  "lineHeight": 0.9,}), 
-#                                     className = 'w-100')
-#                             ),
-#                     html.Br(),
+                    dbc.Row(
+                            dbc.Col(
+                                dbc.Card(
+                                        [html.H4(
+                                                children="Date range",
+                                                style={
+                                                    "textAlign": "center",
+                                                    "color": colors["recovered_text"],
+                                                    "padding-top":'5px',
+                                                    "font-weight": "bold"
+                                                },
+                                            ),
+                                        dbc.CardBody(slajder),
+                                        html.Div(id='output-date-range-slider', style = {'color':colors['recovered_text']})], 
+                                        style = {"backgroundColor": "#393939",
+                                                 "borderRadius": "12px",
+                                                 "lineHeight": 0.9,}), 
+                                    className = 'w-100')
+                            ),
+                    html.Br(),
                     dbc.Row(
                         [
                             dbc.Col(
@@ -584,7 +585,11 @@ app.layout = html.Div(
         )
     ]
 )
-
+@app.callback(
+    dash.dependencies.Output('output-date-range-slider', 'children'),
+    [dash.dependencies.Input('date-range-slider', 'value')])
+def upate_output(value):
+    return 'You have selected "{}, {}"'.format(range_slider_marks[value[0]], range_slider_marks[value[1]])
 if __name__ == "__main__":
     # app.run_server(debug=True, use_reloader=True, threaded=True, port = 1776)
     app.run_server()
