@@ -388,12 +388,11 @@ numdate= [x for x in range(len(nabis_dispatch_data['Date'].unique()))]
 # numdate= [x.strftime('%d/%m') for x in nabis_dispatch_data['Date'].dt.date.unique().tolist()]
 numdate = numdate[::7]
 #then in the Slider
-slajder = html.Div(dcc.RangeSlider(id = 'date-range-slider',min=numdate[0], #the first date
+slajder = html.Div(dcc.RangeSlider(min=numdate[0], #the first date
                max=numdate[-1], #the last date
                value=[numdate[0], numdate[-1]], #default: the first
-               marks = range_slider_marks_sliced,
+               marks = {numd:date.strftime('%d/%m') for numd,date in zip(numdate, nabis_dispatch_data['Date'].dt.date.unique().tolist()[::7])},
                # tooltip = {'placement':'bottom', 'always_visible':True},
-               pushable = 2,
                allowCross = False), style = {"backgroundColor": "#393939"})
 # slajder = dcc.Slider(
 #     min=0,
@@ -445,8 +444,7 @@ app.layout = html.Div(
                                                     "font-weight": "bold"
                                                 },
                                             ),
-                                        dbc.CardBody(slajder),
-                                        html.Div(id='output-date-range-slider', style = {'color':colors['recovered_text']})], 
+                                        dbc.CardBody(slajder)], 
                                         style = {"backgroundColor": "#393939",
                                                  "borderRadius": "12px",
                                                  "lineHeight": 0.9,}), 
@@ -586,11 +584,7 @@ app.layout = html.Div(
         )
     ]
 )
-@app.callback(
-    dash.dependencies.Output('output-date-range-slider', 'children'),
-    [dash.dependencies.Input('date-range-slider', 'value')])
-def upate_output(value):
-    return 'You have selected "{}, {}"'.format(range_slider_marks[value[0]], range_slider_marks[value[1]])
+
 if __name__ == "__main__":
     # app.run_server(debug=True, use_reloader=True, threaded=True, port = 1776)
     app.run_server()
