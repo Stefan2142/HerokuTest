@@ -13,7 +13,8 @@ import pandas as pd
 from plotly.subplots import make_subplots
 import datetime as dt
 from dash_bootstrap_templates import load_figure_template
-
+import dash_auth
+from users import USERNAME_PASSWORD_PAIRS
 # Overwrite your CSS setting by including style locally
 colors = {
     "background": "#2D2D2D",
@@ -121,6 +122,7 @@ external_stylesheets = [
 ]
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], title = 'NABIS')
+auth = dash_auth.BasicAuth(app, USERNAME_PASSWORD_PAIRS)
 server = app.server
 def create_tabs():
     tabs = []
@@ -329,7 +331,7 @@ total_rescheduled_fig = px.pie(total_rescheduled,
 
 total_rescheduled_fig.update_layout(paper_bgcolor = "#3A3A3A", margin=dict(t=0, b=0, l=0, r=0), height = 250)
 total_rescheduled_fig.update_traces(
-    textposition="inside", texttemplate="%{label}: <br>(%{percent})"
+    textposition="inside", texttemplate="%{label}: <br>(%{value})"
 )
 total_rescheduled_fig.update_layout(showlegend=False)
 
@@ -449,6 +451,32 @@ slajder = html.Div(dcc.RangeSlider(id = 'date-range-slider',min=numdate[0], #the
 #     value=5,
 #     tooltip={"placement": "bottom", "always_visible": True},
 # )
+index_pahe = html.Div(
+        dbc.Navbar(
+    [
+        html.A(
+            # Use row and col to control vertical alignment of logo / brand
+            [dbc.Row(
+                [
+                    dbc.Col(html.Img(src=PLOTLY_LOGO, height="30px", style = {'backgroundColor':'white'})),
+                    dbc.Col(dbc.NavbarBrand("- Dispatch dashboard", className="ml-2", style = {"font-weight": "bold"})),
+                    
+                ],
+                align="center",
+                no_gutters=True,
+            )]
+            
+        ),
+        dbc.NavbarToggler(id="navbar-toggler", n_clicks=0),
+        # dbc.Collapse(
+        #     navbar, id="navbar-collapse", navbar=True, is_open=False
+        # ),
+        
+    ],
+    color="dark",
+    dark=True,
+        )
+    )
 app.layout = html.Div(
     [
         dbc.Navbar(
@@ -474,7 +502,7 @@ app.layout = html.Div(
     ],
     color="dark",
     dark=True,
-),
+    ),
         
         dbc.Card(
             dbc.CardBody(
