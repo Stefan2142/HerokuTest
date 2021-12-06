@@ -8,8 +8,8 @@ from plotly.subplots import make_subplots
 from dash_bootstrap_templates import load_figure_template
 import dash_auth
 from users import USERNAME_PASSWORD_PAIRS
-from app_style import *
-from routines import *
+from apps.app_style import *
+from apps.routines import *
 
 
 nabis_dispatch_data = prepare_dataset()
@@ -17,6 +17,7 @@ names = list(set(nabis_dispatch_data["Your name"].values.tolist()))
 
 
 NABIS_LOGO = "https://assets.website-files.com/5c253860fd28a73e98ee5416/60b7c13e4795f4648fbf7b04_nabis_lockup_n.png"
+
 
 def create_tabs(start_date="", end_date=""):
     print(f"Working with {start_date}, {end_date}")
@@ -332,7 +333,6 @@ def create_tabs(start_date="", end_date=""):
     return tabs
 
 
-
 def total_rescheduled(start_date="", end_date=""):
     nabis_dispatch_data_copy = nabis_dispatch_data.copy(deep=True)
     if start_date != "" and end_date != "":
@@ -499,40 +499,8 @@ def date_range(start_date="", end_date=""):
     return date_range_slider
 
 
-app.layout = html.Div(
+layout = html.Div(
     [
-        dbc.Navbar(
-            [
-                html.A(
-                    # Use row and col to control vertical alignment of logo / brand
-                    [
-                        dbc.Row(
-                            [
-                                dbc.Col(
-                                    html.Img(
-                                        src=NABIS_LOGO,
-                                        height="30px",
-                                        style={"backgroundColor": "white"},
-                                    )
-                                ),
-                                dbc.Col(
-                                    dbc.NavbarBrand(
-                                        " - Dispatch dashboard",
-                                        className="ml-2",
-                                        style={"font-weight": "bold"},
-                                    )
-                                ),
-                            ],
-                            align="center",
-                            className="g-0",
-                        )
-                    ]
-                ),
-                dbc.NavbarToggler(id="navbar-toggler", n_clicks=0),
-            ],
-            color="dark",
-            dark=True,
-        ),
         dbc.Card(
             dbc.CardBody(
                 [
@@ -782,46 +750,6 @@ app.layout = html.Div(
         ),
     ]
 )
-
-
-@app.callback(
-    [
-        dash.dependencies.Output("tabs-parent", "children"),
-        dash.dependencies.Output("orders-by-member", "figure"),
-        dash.dependencies.Output("rescheduled-by-member", "figure"),
-        dash.dependencies.Output("orders-by-city", "figure"),
-        dash.dependencies.Output("orders-by-weekday", "figure"),
-        dash.dependencies.Output("output-date-range-slider", "children"),
-    ],
-    dash.dependencies.Input("date-range-slider", "value"),
-)
-def update_output(value):
-
-    return [
-        create_tabs(
-            start_date=range_slider_marks[value[0]],
-            end_date=range_slider_marks[value[1]],
-        ),
-        orders_by_member(
-            start_date=range_slider_marks[value[0]],
-            end_date=range_slider_marks[value[1]],
-        ),
-        total_rescheduled(
-            start_date=range_slider_marks[value[0]],
-            end_date=range_slider_marks[value[1]],
-        ),
-        order_by_city(
-            start_date=range_slider_marks[value[0]],
-            end_date=range_slider_marks[value[1]],
-        ),
-        orders_by_weekday(
-            start_date=range_slider_marks[value[0]],
-            end_date=range_slider_marks[value[1]],
-        ),
-        "Date range selected: {} to {}".format(
-            range_slider_marks[value[0]], range_slider_marks[value[1]]
-        ),
-    ]
 
 
 # @app.callback(

@@ -7,12 +7,18 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 
-# from app import app, server
-from apps import dashboard
 
-server = app.server 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], title="NABIS", suppress_callback_exceptions=True)
-server.config.update(SECRET_KEY='291a47103f3cd8fc26d05ffc7b31e33f73ca3d459d6259bd')
+from apps import dashboard, routines
+
+app = dash.Dash(
+    __name__,
+    external_stylesheets=[dbc.themes.BOOTSTRAP],
+    title="NABIS",
+    suppress_callback_exceptions=True,
+)
+
+server = app.server
+server.config.update(SECRET_KEY="291a47103f3cd8fc26d05ffc7b31e33f73ca3d459d6259bd")
 # auth = dash_auth.BasicAuth(app, USERNAME_PASSWORD_PAIRS)
 
 # Login manager object will be used to login / logout users
@@ -35,7 +41,6 @@ def load_user(username):
     So we'll simply return a User object with the passed in username.
     """
     return User(username)
-
 
 
 NABIS_LOGO = "https://assets.website-files.com/5c253860fd28a73e98ee5416/60b7c13e4795f4648fbf7b04_nabis_lockup_n.png"
@@ -238,7 +243,7 @@ app.layout = html.Div(
 
 index_page = html.Div(
     [
-        dbc.Card(dbc.CardBody(dcc.Link("Go to Page 1", href="/apps/dash_test2"))),
+        dbc.Card(dbc.CardBody(dcc.Link("Go to Page 1", href="/apps/dashboard"))),
     ]
 )
 
@@ -288,7 +293,7 @@ def display_page(pathname):
     elif pathname == "/success":
         if current_user.is_authenticated:
             view = success
-            url = "apps/dash_test2"
+            url = "apps/dashboard"
         else:
             view = login  # failed
             url = "/"
@@ -298,9 +303,9 @@ def display_page(pathname):
         view = login
         url = "/"
 
-    elif pathname == "/apps/dash_test2":
+    elif pathname == "/apps/dashboard":
         if current_user.is_authenticated:
-            view = dash_test2.layout
+            view = dashboard.layout
         else:
             view = "Redirecting to login..."
             url = "/"
@@ -310,5 +315,46 @@ def display_page(pathname):
     return view, url
 
 
+@app.callback(
+    [
+        dash.dependencies.Output("tabs-parent", "children"),
+        dash.dependencies.Output("orders-by-member", "figure"),
+        dash.dependencies.Output("rescheduled-by-member", "figure"),
+        dash.dependencies.Output("orders-by-city", "figure"),
+        dash.dependencies.Output("orders-by-weekday", "figure"),
+        dash.dependencies.Output("output-date-range-slider", "children"),
+    ],
+    dash.dependencies.Input("date-range-slider", "value"),
+)
+def update_output(value):
+
+    return [
+        dashboard.create_tabs(
+            start_date=dashboard.range_slider_marks[value[0]],
+            end_date=dashboard.range_slider_marks[value[1]],
+        ),
+        dashboard.orders_by_member(
+            start_date=dashboard.range_slider_marks[value[0]],
+            end_date=dashboard.range_slider_marks[value[1]],
+        ),
+        dashboard.total_rescheduled(
+            start_date=dashboard.range_slider_marks[value[0]],
+            end_date=dashboard.range_slider_marks[value[1]],
+        ),
+        dashboard.order_by_city(
+            start_date=dashboard.range_slider_marks[value[0]],
+            end_date=dashboard.range_slider_marks[value[1]],
+        ),
+        dashboard.orders_by_weekday(
+            start_date=dashboard.range_slider_marks[value[0]],
+            end_date=dashboard.range_slider_marks[value[1]],
+        ),
+        "Date range selected: {} to {}".format(
+            dashboard.range_slider_marks[value[0]],
+            dashboard.range_slider_marks[value[1]],
+        ),
+    ]
+
+
 if __name__ == "__main__":
-    app.run_server()
+    app.run_server(debug=True)
