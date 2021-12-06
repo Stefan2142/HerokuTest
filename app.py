@@ -14,8 +14,10 @@ app = dash.Dash(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     title="NABIS",
+    
     suppress_callback_exceptions=True,
 )
+app.css.config.serve_locally = True
 
 server = app.server
 server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
