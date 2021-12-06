@@ -8,7 +8,7 @@ import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 
 from app import app, server
-from apps import dash_test2
+from apps import dashboard
 
 server = app.server 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], title="NABIS", suppress_callback_exceptions=True)
