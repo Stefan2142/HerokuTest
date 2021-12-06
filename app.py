@@ -1,861 +1,314 @@
-# -*- coding: utf-8 -*-
+from flask import Flask
+from flask_login import login_user, LoginManager, UserMixin, logout_user, current_user
+
 import dash
-from dash import html
-from dash import dcc
+import dash_core_components as dcc
+import dash_html_components as html
 import dash_bootstrap_components as dbc
-import plotly.graph_objs as go
-import plotly.express as px
-from plotly.subplots import make_subplots
-from dash_bootstrap_templates import load_figure_template
-import dash_auth
-from users import USERNAME_PASSWORD_PAIRS
-from style import *
-from routines import *
+from dash.dependencies import Input, Output, State
+
+from app import app, server
+from apps import dash_test2
+
+server = app.server 
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], title="NABIS", suppress_callback_exceptions=True)
+server.config.update(SECRET_KEY='291a47103f3cd8fc26d05ffc7b31e33f73ca3d459d6259bd')
+# auth = dash_auth.BasicAuth(app, USERNAME_PASSWORD_PAIRS)
+
+# Login manager object will be used to login / logout users
+login_manager = LoginManager()
+login_manager.init_app(server)
+login_manager.login_view = "/"
+
+# User data model. It has to have at least self.id as a minimum
 
 
-def create_tabs(start_date="", end_date=""):
-    print(f"Working with {start_date}, {end_date}")
-    nabis_dispatch_data_copy = nabis_dispatch_data.copy(deep=True)
-    if start_date != "" and end_date != "":
-        nabis_dispatch_data_copy = nabis_dispatch_data[
-            nabis_dispatch_data["Date"].between(start_date, end_date, inclusive=True)
-        ]
-    tabs = []
-
-    fig = go.Figure()
-
-    def populate(name, x, y):
-        fig.add_trace(
-            go.Scatter(
-                x=x,
-                y=y,
-                mode="lines",
-                name=name,
-                line=dict(color=colors[name], width=4),
-                fill="tozeroy",
-                line_shape="spline",
-            )
-        )
-
-    # TOTAL ORDERS
-    for name in names:
-        populate(
-            name=name,
-            x=nabis_dispatch_data_copy[nabis_dispatch_data_copy["Your name"] == name]
-            .groupby(by="Date")
-            .sum()
-            .reset_index()["Date"],
-            y=nabis_dispatch_data_copy[nabis_dispatch_data_copy["Your name"] == name]
-            .groupby(by="Date")
-            .sum()
-            .reset_index()["Total orders"],
-        )
-
-    fig.update_layout(
-        hovermode="x",
-        font=dict(
-            family="sans-serif",  # Courier New, monospace
-            size=14,
-            color=colors["figure_text"],
-        ),
-        legend=dict(
-            x=0.02,
-            y=1,
-            traceorder="normal",
-            font=dict(family="sans-serif", size=12, color=colors["figure_text"]),
-            bgcolor="#393939",
-            borderwidth=5,
-        ),
-        paper_bgcolor=colors["background"],
-        plot_bgcolor="#393939",
-        margin=dict(l=0, r=0, t=0, b=0),
-        height=300,
-    )
-    fig.update_xaxes(
-        showgrid=True,
-        gridwidth=1,
-        gridcolor="#3A3A3A",
-        fixedrange=True,
-        range=[
-            nabis_dispatch_data_copy["Date"].min(),
-            nabis_dispatch_data_copy["Date"].max(),
-        ],
-    )
-    # fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="#3A3A3A")
-
-    fig.update_yaxes(
-        zeroline=True, zerolinewidth=2, zerolinecolor="#3A3A3A", fixedrange=True
-    )
-    tabs.append(
-        dcc.Tab(
-            label="Total orders",
-            value="Total orders",
-            children=[
-                dcc.Graph(
-                    figure=fig,
-                    config={"displayModeBar": False, "scrollZoom": False},
-                    animate=True,
-                )
-            ],
-            style=tab_style,
-        )
-    )
-
-    # TOTAL RESCHEDULED
-    fig = go.Figure()
-    for name in names:
-        populate(
-            name=name,
-            x=nabis_dispatch_data_copy[nabis_dispatch_data_copy["Your name"] == name]
-            .groupby(by="Date")
-            .sum()
-            .reset_index()["Date"],
-            y=nabis_dispatch_data_copy[nabis_dispatch_data_copy["Your name"] == name]
-            .groupby(by="Date")
-            .sum()
-            .reset_index()["Total rescheduled"],
-        )
-
-    fig.update_layout(
-        hovermode="x",
-        font=dict(
-            family="sans-serif",  # Courier New, monospace
-            size=14,
-            color=colors["figure_text"],
-        ),
-        legend=dict(
-            x=0.02,
-            y=1,
-            traceorder="normal",
-            font=dict(family="sans-serif", size=12, color=colors["figure_text"]),
-            bgcolor="#393939",
-            borderwidth=5,
-        ),
-        paper_bgcolor=colors["background"],
-        plot_bgcolor="#393939",
-        margin=dict(l=0, r=0, t=0, b=0),
-        height=300,
-    )
-    fig.update_xaxes(
-        showgrid=True,
-        gridwidth=1,
-        gridcolor="#3A3A3A",
-        fixedrange=True,
-        range=[
-            nabis_dispatch_data_copy["Date"].min(),
-            nabis_dispatch_data_copy["Date"].max(),
-        ],
-    )
-    # fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="#3A3A3A")
-
-    fig.update_yaxes(
-        zeroline=True, zerolinewidth=2, zerolinecolor="#3A3A3A", fixedrange=True
-    )
-    tabs.append(
-        dcc.Tab(
-            label="Total rescheduled orders",
-            value="Total rescheduled orders",
-            children=[
-                dcc.Graph(
-                    figure=fig,
-                    config={"displayModeBar": False, "scrollZoom": False},
-                    animate=True,
-                )
-            ],
-            style=tab_style,
-        )
-    )
-
-    # Iteration
-    for name in names:
-        # fig = go.Figure()
-        fig = make_subplots(specs=[[{"secondary_y": True}]])
-
-        # temp_df = nabis_dispatch_data_copy[nabis_dispatch_data_copy["Your name"] == name].groupby(by='Date')['Total orders'].sum().reset_index()
-        temp_df = (
-            nabis_dispatch_data_copy[nabis_dispatch_data_copy["Your name"] == name]
-            .groupby(by="Date")
-            .agg(
-                {
-                    "Total orders": "sum",
-                    "DecimalTime": "first",
-                    "Total rescheduled": "sum",
-                }
-            )
-            .reset_index()
-        )
-        fig.add_trace(
-            go.Bar(
-                x=temp_df["Date"],
-                y=temp_df["DecimalTime"],
-                name="Hours",
-                marker_color="#dc3545",
-            ),
-            secondary_y=False,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=temp_df["Date"],
-                y=temp_df["Total orders"],
-                mode="lines+markers",
-                name="Total orders",
-                line=dict(color="#33FF51", width=4),
-                fill="tozeroy",
-                line_shape="spline",
-                marker=dict(size=7, color="rgba(255, 182, 193, .9)"),
-            ),
-            secondary_y=True,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=temp_df["Date"],
-                y=temp_df["Total rescheduled"],
-                mode="lines+markers",
-                name="Total rescheduled orders",
-                line=dict(color=colors["Sasa"], width=4),
-                fill="tozeroy",
-                line_shape="spline",
-                marker=dict(size=5, color="rgba(255, 182, 193, .9)"),
-            ),
-            secondary_y=True,
-        )
-
-        fig.update_layout(
-            hovermode="x",
-            font=dict(
-                family="Courier New, monospace",
-                size=14,
-                color=colors["figure_text"],
-            ),
-            legend=dict(
-                x=0.02,
-                y=1,
-                traceorder="normal",
-                font=dict(family="sans-serif", size=12, color=colors["figure_text"]),
-                bgcolor="#393939",
-                borderwidth=5,
-            ),
-            paper_bgcolor=colors["background"],
-            plot_bgcolor="#393939",
-            margin=dict(l=0, r=0, t=0, b=0),
-            height=300,
-        )
-        fig.update_xaxes(
-            showgrid=True, gridwidth=1, gridcolor="#3A3A3A", fixedrange=True
-        )
-        # fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="#3A3A3A")
-
-        fig.update_yaxes(
-            zeroline=True, zerolinewidth=2, zerolinecolor="#3A3A3A", fixedrange=True
-        )
-        tabs.append(
-            dcc.Tab(
-                label=name,
-                value=name,
-                children=[
-                    dcc.Graph(
-                        figure=fig,
-                        config={"displayModeBar": False, "scrollZoom": False},
-                    )
-                ],
-                style=tab_style,
-            )
-        )
-
-    fig = go.Figure()
-    for name in names:
-        populate(
-            name=name,
-            x=nabis_dispatch_data_copy[nabis_dispatch_data_copy["Your name"] == name]
-            .groupby(by="Date")
-            .sum()
-            .reset_index()["Date"],
-            y=nabis_dispatch_data_copy[nabis_dispatch_data_copy["Your name"] == name]
-            .groupby(by="Date")
-            .sum()
-            .reset_index()["DecimalTime"],
-        )
-
-    fig.update_layout(
-        hovermode="x",
-        font=dict(
-            family="sans-serif",  # Courier New, monospace
-            size=14,
-            color=colors["figure_text"],
-        ),
-        legend=dict(
-            x=0.02,
-            y=1,
-            traceorder="normal",
-            font=dict(family="sans-serif", size=12, color=colors["figure_text"]),
-            bgcolor="#393939",
-            borderwidth=5,
-        ),
-        paper_bgcolor=colors["background"],
-        plot_bgcolor="#393939",
-        margin=dict(l=0, r=0, t=0, b=0),
-        height=300,
-    )
-    fig.update_xaxes(
-        showgrid=True,
-        gridwidth=1,
-        gridcolor="#3A3A3A",
-        fixedrange=True,
-        range=[
-            nabis_dispatch_data_copy["Date"].min(),
-            nabis_dispatch_data_copy["Date"].max(),
-        ],
-    )
-    # fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor="#3A3A3A")
-
-    fig.update_yaxes(
-        zeroline=True, zerolinewidth=2, zerolinecolor="#3A3A3A", fixedrange=True
-    )
-    tabs.append(
-        dcc.Tab(
-            label="Working hours",
-            value="Working hours",
-            children=[
-                dcc.Graph(
-                    figure=fig, config={"displayModeBar": False, "scrollZoom": False}
-                )
-            ],
-            style=tab_style,
-        )
-    )
-
-    return tabs
+class User(UserMixin):
+    def __init__(self, username):
+        self.id = username
 
 
-nabis_dispatch_data = prepare_dataset()
-names = list(set(nabis_dispatch_data["Your name"].values.tolist()))
+@login_manager.user_loader
+def load_user(username):
+    """This function loads the user by user id. Typically this looks up the user from a user database.
+    We won't be registering or looking up users in this example, since we'll just login using LDAP server.
+    So we'll simply return a User object with the passed in username.
+    """
+    return User(username)
 
 
-external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
 
-
-external_stylesheets = [
-    "https://codepen.io/chriddyp/pen/bWLwgP.css",
-    dbc.themes.SUPERHERO,
-]
-external_stylesheets = [
-    "https://codepen.io/unicorndy/pen/GRJXrvP.css",
-    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css",
-]
 NABIS_LOGO = "https://assets.website-files.com/5c253860fd28a73e98ee5416/60b7c13e4795f4648fbf7b04_nabis_lockup_n.png"
 
-range_slider_marks = {}
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP], title="NABIS")
-auth = dash_auth.BasicAuth(app, USERNAME_PASSWORD_PAIRS)
-server = app.server
 
-
-def total_rescheduled(start_date="", end_date=""):
-    nabis_dispatch_data_copy = nabis_dispatch_data.copy(deep=True)
-    if start_date != "" and end_date != "":
-        nabis_dispatch_data_copy = nabis_dispatch_data[
-            nabis_dispatch_data["Date"].between(start_date, end_date, inclusive=True)
-        ]
-
-    total_rescheduled = (
-        nabis_dispatch_data_copy.groupby(["Your name"]).sum().reset_index(inplace=False)
-    )
-    # total_rescheduled['Total rescheduled percentage'] = total_rescheduled[['Total rescheduled', 'Total orders']].apply(lambda x: str(f"{((x['Total rescheduled'] / x['Total orders']) * 100):.2f}%"), axis = 1)
-
-    total_rescheduled_fig = px.pie(
-        total_rescheduled, values="Total rescheduled", names="Your name"
-    )
-
-    total_rescheduled_fig.update_layout(
-        paper_bgcolor="#3A3A3A", margin=dict(t=0, b=0, l=0, r=0), height=250
-    )
-    total_rescheduled_fig.update_traces(
-        textposition="inside", texttemplate="%{label}: <br>(%{value})"
-    )
-    total_rescheduled_fig.update_layout(showlegend=False)
-    return total_rescheduled_fig
-
-
-def orders_by_member(start_date="", end_date=""):
-    nabis_dispatch_data_copy = nabis_dispatch_data.copy(deep=True)
-    if start_date != "" and end_date != "":
-        nabis_dispatch_data_copy = nabis_dispatch_data[
-            nabis_dispatch_data["Date"].between(start_date, end_date, inclusive=True)
-        ]
-
-    best_members_df = nabis_dispatch_data_copy.groupby(["Your name"]).sum()
-    best_members_df.reset_index(inplace=True)
-    best_member = best_members_df.nlargest(1, "Total orders").to_dict("records")[0]
-    best_members_fig = px.pie(
-        best_members_df,
-        values="Total orders",
-        names="Your name",
-        hole=0.4,
-        color_discrete_sequence=px.colors.diverging.Temps,
-    )
-    best_members_fig.update_layout(
-        paper_bgcolor="#3A3A3A", margin=dict(t=0, b=0, l=0, r=0), height=250
-    )
-    best_members_fig.update_traces(
-        textposition="inside", texttemplate="%{label}: <br>(%{percent})"
-    )
-    best_members_fig.update_layout(showlegend=False)
-    return best_members_fig
-
-
-def order_by_city(start_date="", end_date=""):
-    nabis_dispatch_data_copy = nabis_dispatch_data.copy(deep=True)
-    if start_date != "" and end_date != "":
-        nabis_dispatch_data_copy = nabis_dispatch_data[
-            nabis_dispatch_data["Date"].between(start_date, end_date, inclusive=True)
-        ]
-    best_cities_df = nabis_dispatch_data_copy.groupby(["City"]).sum()
-    best_cities_df.reset_index(inplace=True)
-    best_city_fig = px.pie(
-        best_cities_df, values="Total orders", names="City", hole=0.4
-    )
-    best_city_fig.update_traces(
-        textposition="inside", texttemplate="%{label}: <br>(%{percent})"
-    )
-    best_city_fig.update_layout(
-        paper_bgcolor="#3A3A3A",
-        margin=dict(t=10, b=0, l=0, r=0),
-        height=250,
-        showlegend=False,
-    )
-    return best_city_fig
-
-
-def orders_by_weekday(start_date="", end_date=""):
-    custom_weekday_sort = {
-        "Monday": 0,
-        "Tuesday": 1,
-        "Wednesday": 2,
-        "Thursday": 3,
-        "Friday": 4,
-        "Saturday": 5,
-        "Sunday": 6,
-    }
-    nabis_dispatch_data_copy = nabis_dispatch_data.copy(deep=True)
-    if start_date != "" and end_date != "":
-        nabis_dispatch_data_copy = nabis_dispatch_data[
-            nabis_dispatch_data["Date"].between(start_date, end_date, inclusive=True)
-        ]
-
-    best_weekday_df = nabis_dispatch_data_copy.groupby(["Weekday"]).sum()
-    best_weekday_df.reset_index(inplace=True)
-    best_weekday_df.sort_values(
-        by=["Weekday"], inplace=True, key=lambda x: x.map(custom_weekday_sort)
-    )
-    weekdays_fig = px.bar(
-        best_weekday_df,
-        x="Weekday",
-        y="Total orders",
-        text=best_weekday_df["Total orders"].values.tolist(),
-        # title="Weekday sales order distribution",
-        color="Total orders",
-        color_continuous_scale="sunsetdark",
-        height=310,
-    )
-    weekdays_fig.update_layout(
-        paper_bgcolor="#3A3A3A",
-        plot_bgcolor="#393939",
-        font=dict(
-            # family="Courier New, monospace",
-            size=14,
-            color=colors["figure_text"],
-        ),
-        legend=dict(
-            x=0.02,
-            y=1,
-            traceorder="normal",
-            # font=dict(family="sans-serif", size=12, color=colors["figure_text"]),
-            bgcolor="#393939",
-            borderwidth=5,
-        ),
-    )
-    weekdays_fig.update_xaxes(fixedrange=True)
-    weekdays_fig.update_yaxes(fixedrange=True)
-    return weekdays_fig
-
-
-def date_range(start_date="", end_date=""):
-
-    # transform every unique date to a number
-    numdate = [x for x in range(len(nabis_dispatch_data["Date"].unique()))]
-    # numdate= [x.strftime('%d/%m') for x in nabis_dispatch_data['Date'].dt.date.unique().tolist()]
-    global range_slider_marks
-
-    # then in the Slider
-    range_slider_marks = {
-        numd: date.strftime("%m/%d/%y")
-        for numd, date in zip(
-            numdate, nabis_dispatch_data["Date"].dt.date.unique().tolist()
-        )
-    }
-    numdate = numdate[::7]
-    range_slider_marks_sliced = {
-        numd: date.strftime("%m/%d/%y")
-        for numd, date in zip(
-            numdate, nabis_dispatch_data["Date"].dt.date.unique().tolist()[::7]
-        )
-    }
-    date_range_slider = html.Div(
-        dcc.RangeSlider(
-            id="date-range-slider",
-            min=numdate[0],  # the first date
-            max=numdate[-1],  # the last date
-            value=[numdate[0], numdate[-1]],  # default: the first
-            marks=range_slider_marks_sliced,
-            # tooltip = {'placement':'bottom', 'always_visible':True},
-            pushable=2,
-            allowCross=False,
-        ),
-        style={"backgroundColor": "#393939"},
-    )
-    return date_range_slider
-
-
-app.layout = html.Div(
+login = html.Div(
     [
-        dbc.Navbar(
+        dbc.Container(
             [
-                html.A(
-                    # Use row and col to control vertical alignment of logo / brand
+                html.Br(),
+                html.Br(),
+                dbc.Container(
                     [
-                        dbc.Row(
+                        # dcc.Location(id="urlLogin", refresh=True),
+                        html.Div(
                             [
-                                dbc.Col(
-                                    html.Img(
-                                        src=NABIS_LOGO,
-                                        height="30px",
-                                        style={"backgroundColor": "white"},
-                                    )
-                                ),
-                                dbc.Col(
-                                    dbc.NavbarBrand(
-                                        " - Dispatch dashboard",
-                                        className="ml-2",
-                                        style={"font-weight": "bold"},
-                                    )
+                                dbc.Container(
+                                    id="loginType",
+                                    children=[
+                                        dbc.Input(
+                                            placeholder="Enter your username",
+                                            type="login",
+                                            id="usernameBox",
+                                            className="fadeIn second",
+                                            n_submit=0,
+                                            size="xs",
+                                            style={"width": "30%"},
+                                        ),
+                                        html.Br(),
+                                        dbc.Input(
+                                            placeholder="Enter your password",
+                                            type="password",
+                                            id="password",
+                                            className="fadeIn third",
+                                            n_submit=0,
+                                            size="xs",
+                                            style={"width": "30%"},
+                                        ),
+                                        html.Br(),
+                                        dbc.Button(
+                                            children="Login",
+                                            n_clicks=0,
+                                            type="submit",
+                                            id="loginButton",
+                                            className="fadeIn fourth",
+                                            color="success",
+                                        ),
+                                        html.Br(),
+                                        html.Br(),
+                                    ],
+                                    className="wrapper fadeInDown",
                                 ),
                             ],
-                            align="center",
-                            className="g-0",
-                        )
-                    ]
+                            style={"height": "100%"},
+                        ),
+                    ],
+                    className="jumbotron h-100",
                 ),
-                dbc.NavbarToggler(id="navbar-toggler", n_clicks=0),
+            ],
+            style={"backgroundColor": "#393939"},
+            className="w-100",
+        ),
+        html.Div(
+            children="",
+            id="output-state",
+            style={"textAlign": "center"},
+            className="container-fluid",
+        ),
+    ],
+    className="h-100",
+    style={
+        "height": "100%",
+        "width": "100%",
+        "background-color": "#393939",
+        "color": "#393939",
+        "min-height": "95vh",
+    },
+)
+
+# Successful login
+# success = html.Div([html.Div([html.H2('Login successful.{}'.format(current_user.get_id())),
+success = html.Div(
+    [
+        html.Div(
+            [
+                html.H2("Redirecting..."),
+                html.Br(),
+                # dcc.Link("Home", href="/"),
+            ]
+        )  # end div
+    ]
+)  # end div
+
+# # Failed Login
+# failed = html.Div(
+#     [
+#         html.Div(
+#             [
+#                 html.H2("Log in Failed. Please try again."),
+#                 html.Br(),
+#                 html.Div([login]),
+#                 dcc.Link("Home", href="/"),
+#             ]
+#         )  # end div
+#     ]
+# )  # end div
+
+# logout
+logout = html.Div(
+    [
+        html.Div(html.H2("You have been logged out - Please login")),
+        html.Br(),
+        dcc.Link("Home", href="/"),
+    ]
+)  # end div
+
+
+@app.callback(
+    Output("url_login", "pathname"),
+    Output("output-state", "children"),
+    [Input("loginButton", "n_clicks")],
+    [State("usernameBox", "value"), State("password", "value")],
+)
+def login_button_click(n_clicks, username, password):
+    if n_clicks > 0:
+        if username == "test" and password == "test":
+            user = User(username)
+            login_user(user)
+            return [
+                "/success",
+                html.P(
+                    "Logging in!",
+                    className="text-success",
+                    style={"textAlign": "center"},
+                ),
+            ]
+        else:
+            return [
+                "/",
+                html.P(
+                    "Incorrect username or password",
+                    className="text-danger",
+                    style={"textAlign": "center"},
+                ),
+            ]
+    return "/", ""
+
+
+# app.layout = html.Div([
+#     dcc.Location(id='url', refresh=False),
+#     html.Div(id='page-content'),
+#     dcc.Link('Go to App1', href='/apps/app1/'),
+#     html.Br(),
+#     dcc.Link('Go to App2', href='/apps/app2/'),
+# ])
+
+NABIS_LOGO = "https://assets.website-files.com/5c253860fd28a73e98ee5416/60b7c13e4795f4648fbf7b04_nabis_lockup_n.png"
+app.layout = html.Div(
+    [
+        dcc.Location(id="url", refresh=False),
+        dcc.Location(id="redirect", refresh=True),
+        dcc.Location(id="url_login", refresh=True),
+        dbc.Navbar(
+            [
+                dbc.NavItem(
+                    html.Img(
+                        src=NABIS_LOGO,
+                        height="30px",
+                        style={"backgroundColor": "white"},
+                    ),
+                    className="mr-auto",
+                ),
+                dbc.NavItem(
+                    children=dbc.NavbarBrand(
+                        "Dispatch dashboard",
+                        className="text-center mx-auto ml-2",
+                        style={"font-weight": "bold"},
+                    ),
+                    className="mx-auto ml-2",
+                    # className = "d-flex justify-content-center",
+                    style={"font-weight": "bold"},
+                ),
+                dbc.NavItem(
+                    [
+                        dbc.NavbarToggler(id="navbar-toggler", n_clicks=0),
+                        dcc.Store(id="login-status", storage_type="session"),
+                        dbc.NavItem(id="user-status-div", className="ml-auto"),
+                    ],
+                    className="ml-auto",
+                ),
             ],
             color="dark",
             dark=True,
+            className="container-fluid",
         ),
-        dbc.Card(
-            dbc.CardBody(
-                [
-                    # Slider row
-                    dbc.Row(
-                        dbc.Col(
-                            dbc.Card(
-                                [
-                                    html.H4(
-                                        children="Date range",
-                                        style={
-                                            "textAlign": "center",
-                                            "color": colors["recovered_text"],
-                                            "padding-top": "5px",
-                                            "font-weight": "bold",
-                                        },
-                                    ),
-                                    dbc.CardBody(date_range()),
-                                    html.Div(
-                                        id="output-date-range-slider",
-                                        style={
-                                            "color": colors["recovered_text"],
-                                            "textAlign": "center",
-                                            "font-weight": "bold",
-                                        },
-                                    ),
-                                    html.Br(),
-                                ],
-                                style={
-                                    "backgroundColor": "#393939",
-                                    "borderRadius": "12px",
-                                    "lineHeight": 0.9,
-                                },
-                            ),
-                            className="w-100",
-                        )
-                    ),
-                    html.Br(),
-                    # Tabs row
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                [
-                                    dbc.Card(
-                                        dbc.CardBody(
-                                            dbc.Tabs(
-                                                children=create_tabs(), id="tabs-parent"
-                                            ),
-                                            style={
-                                                "color": colors["recovered_text"],
-                                                "backgroundColor": "#393939",
-                                                "borderRadius": "12px",
-                                                "lineHeight": 0.9,
-                                            },
-                                        ),
-                                        color="#393939",
-                                        style={
-                                            "borderRadius": "12px",
-                                            "lineHeight": 0.9,
-                                        },
-                                    ),
-                                    html.Br(),
-                                ],
-                                width=12,
-                            ),
-                        ]
-                    ),
-                    # Three pie charts row
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                [
-                                    dbc.Card(
-                                        dbc.Col(
-                                            html.Div(
-                                                [
-                                                    html.H4(
-                                                        children="Total orders by member:",
-                                                        style={
-                                                            "textAlign": "center",
-                                                            "color": colors[
-                                                                "recovered_text"
-                                                            ],
-                                                            "font-weight": "bold",
-                                                        },
-                                                    ),
-                                                    dcc.Graph(
-                                                        id="orders-by-member",
-                                                        figure=orders_by_member(),
-                                                        config={
-                                                            "displayModeBar": False,
-                                                            "scrollZoom": False,
-                                                        },
-                                                    ),
-                                                ],
-                                                style={"width": "100%"},
-                                            )
-                                        ),
-                                        body=True,
-                                        style={
-                                            "color": colors["recovered_text"],
-                                            "backgroundColor": "#393939",
-                                            "borderRadius": "12px",
-                                            "lineHeight": 0.9,
-                                        },
-                                    )
-                                ],
-                                width=4,
-                            ),
-                            # Orders by city
-                            dbc.Col(
-                                [
-                                    dbc.Card(
-                                        dbc.Row(
-                                            html.Div(
-                                                [
-                                                    html.H4(
-                                                        children="Orders by city:",
-                                                        style={
-                                                            "textAlign": "center",
-                                                            "color": colors[
-                                                                "recovered_text"
-                                                            ],
-                                                            "font-weight": "bold",
-                                                        },
-                                                    ),
-                                                    dcc.Graph(
-                                                        id="orders-by-city",
-                                                        figure=order_by_city(),
-                                                        style={
-                                                            "color": colors[
-                                                                "recovered_text"
-                                                            ],
-                                                            "backgroundColor": "#393939",
-                                                            "borderRadius": "12px",
-                                                            "lineHeight": 0.9,
-                                                        },
-                                                        config={
-                                                            "displayModeBar": False,
-                                                            "scrollZoom": False,
-                                                        },
-                                                    ),
-                                                ],
-                                                style={"width": "100%"},
-                                            )
-                                        ),
-                                        body=True,
-                                        style={
-                                            "color": colors["recovered_text"],
-                                            "backgroundColor": "#393939",
-                                            "borderRadius": "12px",
-                                            "lineHeight": 0.9,
-                                        },
-                                    )
-                                ],
-                                width=4,
-                            ),
-                            # Rescheduled by member
-                            dbc.Col(
-                                [
-                                    dbc.Card(
-                                        dbc.Col(
-                                            html.Div(
-                                                [
-                                                    html.H4(
-                                                        children="Total rescheduled orders by member:",
-                                                        style={
-                                                            "textAlign": "center",
-                                                            "color": colors[
-                                                                "recovered_text"
-                                                            ],
-                                                            "font-weight": "bold",
-                                                        },
-                                                    ),
-                                                    dcc.Graph(
-                                                        id="rescheduled-by-member",
-                                                        figure=total_rescheduled(),
-                                                        config={
-                                                            "displayModeBar": False,
-                                                            "scrollZoom": False,
-                                                        },
-                                                    ),
-                                                ],
-                                                style={"width": "100%"},
-                                            )
-                                        ),
-                                        body=True,
-                                        style={
-                                            "color": colors["recovered_text"],
-                                            "backgroundColor": "#393939",
-                                            "borderRadius": "12px",
-                                            "lineHeight": 0.9,
-                                        },
-                                    )
-                                ],
-                                width=4,
-                            ),
-                        ]
-                    ),
-                    html.Br(),
-                    # Weekday row
-                    dbc.Row(
-                        [
-                            dbc.Col(
-                                [
-                                    dbc.Card(
-                                        [
-                                            html.H4(
-                                                children="Total order distribution by weekday:",
-                                                style={
-                                                    "textAlign": "center",
-                                                    "color": colors["recovered_text"],
-                                                    "padding-top": "5px",
-                                                    "font-weight": "bold",
-                                                },
-                                            ),
-                                            dbc.CardBody(
-                                                dcc.Graph(
-                                                    id="orders-by-weekday",
-                                                    figure=orders_by_weekday(),
-                                                    config={
-                                                        "displayModeBar": False,
-                                                        "scrollZoom": False,
-                                                    },
-                                                )
-                                            ),
-                                        ],
-                                        style={
-                                            "color": colors["recovered_text"],
-                                            "backgroundColor": "#393939",
-                                            "borderRadius": "12px",
-                                            "lineHeight": 0.9,
-                                        },
-                                    ),
-                                ],
-                                width=12,
-                            )
-                        ]
-                    ),
-                ],
-                style={
-                    "color": colors["recovered_text"],
-                    "backgroundColor": colors["background"],
-                },
-            ),
-            color=colors["background"],
-        ),
+        # dcc.Store(id="login-status", storage_type="session"),
+        html.Div(id="page-content"),
+    ]
+)
+
+index_page = html.Div(
+    [
+        dbc.Card(dbc.CardBody(dcc.Link("Go to Page 1", href="/apps/dash_test2"))),
     ]
 )
 
 
 @app.callback(
-    [
-        dash.dependencies.Output("tabs-parent", "children"),
-        dash.dependencies.Output("orders-by-member", "figure"),
-        dash.dependencies.Output("rescheduled-by-member", "figure"),
-        dash.dependencies.Output("orders-by-city", "figure"),
-        dash.dependencies.Output("orders-by-weekday", "figure"),
-        dash.dependencies.Output("output-date-range-slider", "children"),
-    ],
-    dash.dependencies.Input("date-range-slider", "value"),
+    Output("user-status-div", "children"),
+    Output("login-status", "data"),
+    [Input("url", "pathname")],
 )
-def update_output(value):
+def login_status(url):
+    """callback to display login/logout link in the header"""
+    if (
+        hasattr(current_user, "is_authenticated")
+        and current_user.is_authenticated
+        and url != "/logout"
+    ):  # If the URL is /logout, then the user is about to be logged out anyways
 
-    return [
-        create_tabs(
-            start_date=range_slider_marks[value[0]],
-            end_date=range_slider_marks[value[1]],
-        ),
-        orders_by_member(
-            start_date=range_slider_marks[value[0]],
-            end_date=range_slider_marks[value[1]],
-        ),
-        total_rescheduled(
-            start_date=range_slider_marks[value[0]],
-            end_date=range_slider_marks[value[1]],
-        ),
-        order_by_city(
-            start_date=range_slider_marks[value[0]],
-            end_date=range_slider_marks[value[1]],
-        ),
-        orders_by_weekday(
-            start_date=range_slider_marks[value[0]],
-            end_date=range_slider_marks[value[1]],
-        ),
-        "Date range selected: {} to {}".format(
-            range_slider_marks[value[0]], range_slider_marks[value[1]]
-        ),
-    ]
+        return (
+            dbc.Button("Logout", href="/logout", color="danger"),
+            current_user.get_id(),
+        )
+        # return dcc.Link("logout", href="/logout"), current_user.get_id()
+    else:
+        return dbc.Button("Login", href="/", color="info"), "loggedout"
+        # return dcc.Link("login", href="/"), "loggedout"
 
 
-# @app.callback(
-#     dash.dependencies.Output("output-date-range-slider", "children"),
-#     [dash.dependencies.Input("date-range-slider", "value")],
-# )
-# def upate_output(value):
-#     return 'You have selected "{}, {}"'.format(
-#         range_slider_marks[value[0]], range_slider_marks[value[1]]
-#     )
+@app.callback(
+    Output("page-content", "children"),
+    Output("redirect", "pathname"),
+    [Input("url", "pathname")],
+)
+def display_page(pathname):
+    """callback to determine layout to return"""
+    # We need to determine two things for everytime the user navigates:
+    # Can they access this page? If so, we just return the view
+    # Otherwise, if they need to be authenticated first, we need to redirect them to the login page
+    # So we have two outputs, the first is which view we'll return
+    # The second one is a redirection to another page is needed
+    # In most cases, we won't need to redirect. Instead of having to return two variables everytime in the if statement
+    # We setup the defaults at the beginning, with redirect to dash.no_update; which simply means, just keep the requested url
+    view = None
+    url = dash.no_update
+    print(f"PATH {pathname}")
+    if pathname == "/":
+        view = login
+    elif pathname == "/success":
+        if current_user.is_authenticated:
+            view = success
+            url = "apps/dash_test2"
+        else:
+            view = login  # failed
+            url = "/"
+    elif pathname == "/logout":
+        if current_user.is_authenticated:
+            logout_user()
+        view = login
+        url = "/"
+
+    elif pathname == "/apps/dash_test2":
+        if current_user.is_authenticated:
+            view = dash_test2.layout
+        else:
+            view = "Redirecting to login..."
+            url = "/"
+    else:
+        view = index_page
+    # You could also return a 404 "URL not found" page here
+    return view, url
 
 
 if __name__ == "__main__":
-    # app.run_server(debug=True, use_reloader=True, threaded=True, port=1776)
     app.run_server()
-
-# Things to do for Heroku
-# Uncomment 'server' line
-# Uncomment dash_auth.BasicAuth
-# Modify app.run_server method to app.run_server() only
