@@ -823,11 +823,11 @@ def update_output(value):
             start_date=range_slider_marks[value[0]],
             end_date=range_slider_marks[value[1]],
         ),
-        order_by_city(
+        total_rescheduled(
             start_date=range_slider_marks[value[0]],
             end_date=range_slider_marks[value[1]],
         ),
-        orders_by_member(
+        order_by_city(
             start_date=range_slider_marks[value[0]],
             end_date=range_slider_marks[value[1]],
         ),
