@@ -1,7 +1,7 @@
 dash_table==5.0.0
 dash_extensions==0.0.51
 dash==2.0.0
-dash_bootstrap_components==0.13.0
+dash_bootstrap_components==1.0.1
 plotly==5.3.1
 Flask==1.1.2
 Flask_Login==0.5.0
