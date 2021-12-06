@@ -166,7 +166,7 @@ logout = html.Div(
 )
 def login_button_click(n_clicks, username, password):
     if n_clicks > 0:
-        if username == "test" and password == "test":
+        if username == "Nabisrules" and password == "NabisRules":
             user = User(username)
             login_user(user)
             return [
