@@ -6,7 +6,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
-from whitenoise import WhiteNoise
+# from whitenoise import WhiteNoise
 
 from apps import dashboard, routines
 
@@ -20,7 +20,7 @@ app = dash.Dash(
 app.css.config.serve_locally = True
 
 server = app.server
-server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
+# server.wsgi_app = WhiteNoise(server.wsgi_app, root='static/')
 server.config.update(SECRET_KEY="291a47103f3cd8fc26d05ffc7b31e33f73ca3d459d6259bd")
 # auth = dash_auth.BasicAuth(app, USERNAME_PASSWORD_PAIRS)
 
@@ -361,3 +361,12 @@ def update_output(value):
 
 if __name__ == "__main__":
     app.run_server(debug=False)
+
+# For deployment - server line must be ucommented
+# Useful links:
+# https://medium.com/analytics-vidhya/building-a-dashboard-app-using-plotlys-dash-a-complete-guide-from-beginner-to-pro-e7657a4eb707
+# https://bootsnipp.com/snippets/dldxB
+# https://www.kaggle.com/tavoosi/suicide-data-full-interactive-dashboard/report
+# https://chart-studio.plotly.com/dashboard/Dreamshot:8437/view#/
+# https://github.com/Unicorndy/covid19_dashboard
+# https://uuf.id4atvxperience.pw/plotly-dash-dark-theme.html
